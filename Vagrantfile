@@ -14,6 +14,11 @@ Vagrant.configure(2) do |config|
   # boxes at https://atlas.hashicorp.com/search.
   config.vm.box = "trusty"
 
+  # enable usb
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--usb", "on"]
+    vb.customize ["modifyvm", :id, "--usbehci", "on"]
+  end
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
