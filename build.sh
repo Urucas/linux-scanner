@@ -19,17 +19,18 @@ ARCH=$(uname -m)
 if [ $ARCH = "x86_64" ];
 then
   FLAGS="-L/usr/lib/x86_64-linux-gnu/ " 
+  OUTPUT="linux-scanner"
 else
   FLAGS="-L/usr/lib/i386-linux-gnu/ "
+  OUTPUT="linux-scanner32"
 fi
 FLAGS+="-I/usr/include "
 FLAGS+="-Wall "
 FLAGS+="-Wno-write-strings "
 
-INPUT="main.cpp "
-OUTPUT="-o linux-scanner "
+INPUT="main.cpp"
 
-BUILD=$(gcc $FLAGS $OUTPUT $INPUT -lsane)
+BUILD=$(gcc $FLAGS -o $OUTPUT $INPUT -lsane)
 
 if [ -f linux-scanner ];
 then
