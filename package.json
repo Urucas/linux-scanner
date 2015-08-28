@@ -1,0 +1,19 @@
+{
+  "name": "linux-scanner",
+  "version": "0.0.1",
+  "description": "A simple linux cli for scanning images",
+  "main": "linux-scanner",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Urucas/linux-scanner.git"
+  },
+  "author": "Urucas <hello@urucas.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Urucas/linux-scanner/issues"
+  },
+  "homepage": "https://github.com/Urucas/linux-scanner#readme"
+}
