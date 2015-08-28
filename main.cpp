@@ -22,7 +22,6 @@ class LinuxScanner {
 };
 
 void LinuxScanner::authCallback(SANE_String_Const resource, SANE_Char* username, SANE_Char* password) {
-  
 }
 
 void LinuxScanner::log(char* msg) {
@@ -84,9 +83,31 @@ int LinuxScanner::scan() {
     status = sane_start(device);
     if(!this->isGoood(status)) {
       this->log("Error trying to start scanner", status);
-        return 1;
+      return 1;
     }
+    status = sane_set_io_mode(device, SANE_TRUE);
+    if(!this->isGoood(status)) {
+      this->log("Error setting scanner IO mode", status);
+      return 1;
+    }
+    SANE_Parameters params;
+    status = sane_get_parameters(device, &params);
+    if(!this->isGoood(status)) {
+      this->log("Error getting scanner params", status);
+      return 1;
+    }
+
+    SANE_Byte buffer[32*1024];
+    SANE_Int len;
     
+    while(1) {
+      status = sane_read(device, buffer, sizeof(buffer), &len);
+      if(!this->isGoood(status)) {
+        break;
+      }
+
+    }
+
   }else{
     this->log("An error ocurr while trying to open the device!");
     return 1;
@@ -98,6 +119,7 @@ int main() {
   LinuxScanner scanner;
   int fail = scanner.prepare();  
   if(fail) return 1;
-  
+  fail = scanner.scan();
+  if(fail) return 1;
   return 0;
 }
