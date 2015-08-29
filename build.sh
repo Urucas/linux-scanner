@@ -30,7 +30,7 @@ FLAGS+="-Wno-write-strings "
 
 INPUT="main.cpp"
 
-BUILD=$(gcc $FLAGS -o $OUTPUT $INPUT -lsane)
+BUILD=$(gcc $FLAGS -o $OUTPUT $INPUT -lsane -lm -lpng)
 
 if [ -f linux-scanner ];
 then
