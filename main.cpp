@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <sane/sane.h>
+#include <png.h>
 
 #define SANE_MAX_USERNAME_LEN   128
 #define SANE_MAX_PASSWORD_LEN   128
@@ -19,6 +20,8 @@ class LinuxScanner {
     void log(char* msg, SANE_Status status);
     const SANE_Device* selected_device;
     bool isGoood(SANE_Status status);
+    SANE_Status read(SANE_Handle device);
+    FILE* createTmpFile();
 };
 
 void LinuxScanner::authCallback(SANE_String_Const resource, SANE_Char* username, SANE_Char* password) {
@@ -69,6 +72,40 @@ bool LinuxScanner::isGoood(SANE_Status status) {
   return true;
 }
 
+FILE* LinuxScanner::createTmpFile() {
+  return tmpfile();
+}
+
+SANE_Status LinuxScanner::read(SANE_Handle device) {
+  
+  SANE_Byte buffer[32*1024];
+  SANE_Int len;
+  SANE_Status status;
+  SANE_Word total_bytes = 0;
+  
+  FILE*tmp = this->createTmpFile();
+  png_structp png_ptr = NULL;
+  png_infop info_ptr = NULL;
+  png_bytep row = NULL;
+  
+  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  info_ptr = png_create_info_struct(png_ptr);
+  
+  png_init_io(png_ptr, tmp);
+
+  while(1) {
+    status = sane_read(device, buffer, sizeof(buffer), &len);
+    total_bytes+= (SANE_Word) len;
+    if(!this->isGoood(status)) {
+      break;
+    }
+
+  }
+  if(status == SANE_STATUS_EOF) {
+  }
+  return status;
+}
+
 int LinuxScanner::scan() {
 
   this->log("Trying to open device");
@@ -96,16 +133,12 @@ int LinuxScanner::scan() {
       this->log("Error getting scanner params", status);
       return 1;
     }
-
-    SANE_Byte buffer[32*1024];
-    SANE_Int len;
     
-    while(1) {
-      status = sane_read(device, buffer, sizeof(buffer), &len);
-      if(!this->isGoood(status)) {
-        break;
-      }
-
+    status = this->read(device);
+    sane_close(device);
+    if(!this->isGoood(status)) {
+      this->log("An error ocurr while reading scanner data", status);
+      return 1;
     }
 
   }else{
