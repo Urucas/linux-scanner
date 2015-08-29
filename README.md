@@ -1,10 +1,14 @@
 # linux-scanner
 Scanning in linux from command-line
 
-#Dependencies
+#Build dependencies
 [sane](http://www.sane-project.org/)
 ```bash
 sudo apt-get install libsane-dev
+```
+[libpng](http://www.libpng.org/pub/png/libpng.html)
+```bash
+sudo apt-get install libpng12-dev
 ```
 
 #Build
