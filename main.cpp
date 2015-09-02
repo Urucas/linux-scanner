@@ -22,6 +22,7 @@ class LinuxScanner {
     bool isGoood(SANE_Status status);
     SANE_Status read(SANE_Handle device);
     FILE* createTmpFile();
+    static SANE_Option_Descriptor window_option[2];
 };
 
 void LinuxScanner::authCallback(SANE_String_Const resource, SANE_Char* username, SANE_Char* password) {
@@ -55,7 +56,9 @@ int LinuxScanner::prepare() {
   }
   int i = 0;
   for (; device_list[i]; ++i) {
-    printf ("device `%s' is a %s %s %s\n",                                 device_list[i]->name, device_list[i]->vendor,                              device_list[i]->model, device_list[i]->type);
+    this->log("Availabled devices");
+    this->log((char*)device_list[i]->model);
+    // printf ("device `%s' is a %s %s %s\n", device_list[i]->name, device_list[i]->vendor, device_list[i]->model, device_list[i]->type);
   }
   if(i==0) {
     this->log("No devices available");
@@ -78,8 +81,8 @@ FILE* LinuxScanner::createTmpFile() {
 
 SANE_Status LinuxScanner::read(SANE_Handle device) {
   
-  SANE_Byte buffer[32*1024];
-  SANE_Int len;
+  SANE_Byte buffer[1024*1024];
+  SANE_Int len = 0;
   SANE_Status status;
   SANE_Word total_bytes = 0;
   
@@ -96,20 +99,25 @@ SANE_Status LinuxScanner::read(SANE_Handle device) {
   while(1) {
     status = sane_read(device, buffer, sizeof(buffer), &len);
     total_bytes+= (SANE_Word) len;
+    // printf("%d\n", total_bytes);
     if(!this->isGoood(status)) {
+      this->log("eof", status);
       break;
     }
-
   }
+  sane_close(device);
   if(status == SANE_STATUS_EOF) {
+    printf("end of file\n");
+    status = SANE_STATUS_GOOD;
   }
+
   return status;
 }
 
 int LinuxScanner::scan() {
 
   this->log("Trying to open device");
-  printf("%s", this->selected_device->name);
+  this->log((char *)this->selected_device->model);
   static SANE_Handle device;
   SANE_Status status = sane_open(this->selected_device->name, &device);
   if(!this->isGoood(status)) {
@@ -122,20 +130,28 @@ int LinuxScanner::scan() {
       this->log("Error trying to start scanner", status);
       return 1;
     }
+    
     status = sane_set_io_mode(device, SANE_TRUE);
     if(!this->isGoood(status)) {
       this->log("Error setting scanner IO mode", status);
       return 1;
     }
-    SANE_Parameters params;
-    status = sane_get_parameters(device, &params);
+ 
+    SANE_Parameters* params;	
+    status = sane_get_parameters(device, params);
+ 
+    printf("scanning image: %dx%d", params->pixels_per_line, params->lines); 
+    printf("bytes x line: %d\n", params->bytes_per_line); 
+    printf("pixels x line: %d\n", params->pixels_per_line); 
+    printf("lines: %d\n", params->lines); 
+    printf("depth: %d\n", params->depth); 
+
     if(!this->isGoood(status)) {
       this->log("Error getting scanner params", status);
       return 1;
     }
-    
+  
     status = this->read(device);
-    sane_close(device);
     if(!this->isGoood(status)) {
       this->log("An error ocurr while reading scanner data", status);
       return 1;
