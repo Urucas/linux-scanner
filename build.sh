@@ -26,16 +26,33 @@ else
 fi
 FLAGS+="-I/usr/include "
 FLAGS+="-Wall "
+FLAGS+="-Wuninitialized "
 FLAGS+="-Wno-write-strings "
 
 INPUT="main.cpp"
 
 BUILD=$(gcc $FLAGS -o $OUTPUT $INPUT -lsane -lm -lpng)
 
-if [ -f linux-scanner ];
+
+if [ $ARCH = "x86_64" ];
 then
-  chmod 755 linux-scanner
-  echo_ok "linux-scanner cli successfully created"
+  if [ -f linux-scanner ];
+  then
+    chmod 755 linux-scanner
+    echo_ok "linux-scanner cli successfully created"
+    exit 0
+  else 
+    echo_fail "Error building linux-scanner cli"
+  	exit 1
+  fi
+fi
+
+if [ -f linux-scanner32 ];
+then
+  chmod 755 linux-scanner32
+  echo_ok "linux-scanner32 successfully created"
+  exit 0
 else
-  echo_fail "Error building linux-scanner cli"
+  echo_fail "Error building linux-scanner32 cli"
+  exit 1
 fi
