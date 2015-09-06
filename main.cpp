@@ -125,7 +125,19 @@ int LinuxScanner::scan() {
     return 1;
   }
   if(device) {
-    status = sane_start(device);
+    const SANE_Option_Descriptor *option;
+	
+	SANE_Int num_options = 0;
+	status = sane_control_option(device, 0, SANE_ACTION_GET_VALUE, &num_options, 0);
+	 if(!this->isGoood(status)) {
+      this->log("Error getting scanner options", status);
+      return 1;
+    }
+ 	
+	printf("%d\n", num_options);	
+ 	printf("%d\n", num_options);	
+	
+	status = sane_start(device);
     if(!this->isGoood(status)) {
       this->log("Error trying to start scanner", status);
       return 1;
@@ -136,6 +148,7 @@ int LinuxScanner::scan() {
       this->log("Error setting scanner IO mode", status);
       return 1;
     }
+
 	/* 
     SANE_Parameters* params;	
     status = sane_get_parameters(device, params);
@@ -146,11 +159,7 @@ int LinuxScanner::scan() {
     printf("lines: %d\n", params->lines); 
     printf("depth: %d\n", params->depth); 
 */
-    if(!this->isGoood(status)) {
-      this->log("Error getting scanner params", status);
-      return 1;
-    }
- 	 
+    
     status = this->read(device);
     if(!this->isGoood(status)) {
       this->log("An error ocurr while reading scanner data", status);
