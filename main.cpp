@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <sane/sane.h>
 #include <png.h>
-
+#include <string.h>
+#include <alloca.h>
 #define SANE_MAX_USERNAME_LEN   128
 #define SANE_MAX_PASSWORD_LEN   128
 
@@ -22,6 +23,7 @@ class LinuxScanner {
     bool isGoood(SANE_Status status);
     SANE_Status read(SANE_Handle device);
     FILE* createTmpFile();
+	int getOptionInt(SANE_Handle device, SANE_Option_Descriptor option, int i); 
 };
 
 void LinuxScanner::authCallback(SANE_String_Const resource, SANE_Char* username, SANE_Char* password) {
@@ -114,6 +116,20 @@ SANE_Status LinuxScanner::read(SANE_Handle device) {
   return status;
 }
 
+int LinuxScanner::getOptionInt(SANE_Handle device, SANE_Option_Descriptor option, int i) {
+  printf("%s\n", (char *)option->name);
+  printf("%s\n", (char *)option->desc);
+  int value = 0;
+  void* val;
+  val = alloca(option->size);
+  sane_control_option(device, i, SANE_ACTTION_GET_VALUE, val, 0);
+  if(option->type == SANE_TYPE_INT)
+    value = *(SANE_Int *)val;
+  else
+    value = (int) (SANE_UNFIX (*(SANE_Fixed *) val) + 0.5);
+  return value;
+}
+
 int LinuxScanner::scan() {
 
   this->log("Trying to open device");
@@ -133,10 +149,48 @@ int LinuxScanner::scan() {
       this->log("Error getting scanner options", status);
       return 1;
     }
- 	
-	printf("%d\n", num_options);	
- 	printf("%d\n", num_options);	
+ 
+	for(int i=0;i<num_options;i++) {
+      option = sane_get_option_descriptor(device, i);
+	  if(!SANE_OPTION_IS_SETTABLE(option->cap))
+	    continue;
 	
+	  if(!strcmp(option->name,"br-y")) {
+	    int val = this->getOptionInt(&device, &option, i);
+		  printf("%d\n", resol);
+	  }
+	  /*
+ 	  if(!strcmp(option->name,"resolution")) {
+		printf("%s\n", (char *)option->name);
+	    printf("%s\n", (char *)option->desc);
+		const SANE_Option_Descriptor* resopt;
+		resopt = sane_get_option_descriptor(device, i);
+		printf("%d\n", resopt->size);
+	  }
+	  */
+	  /*
+	  if(!strcmp(option->name,"resolution")) {
+	  	printf("%s\n", (char *)option->name);
+		int resol = 0;
+		const SANE_Option_Descriptor* resopt;
+		resopt = sane_get_option_descriptor(device, i);
+		val = alloca(resopt->size);
+		sane_control_option(device, i, SANE_ACTION_GET_VALUE, val, 0);
+		resol = *(SANE_Int *)val;
+		printf("%d\nn", resol);
+	  }  
+	
+	  // setting full width
+	  *
+	  // setting full height
+	  if(!strcmp(option->name,"tl-y")) {
+	  	printf("%s\n", (char *)option->name);
+		sane_control_option(device, i, SANE_ACTION_SET_VALUE, &height, 0);
+		printf("%s", sane_strstatus(status));
+	  }
+	  */
+	}
+	return 0;
 	status = sane_start(device);
     if(!this->isGoood(status)) {
       this->log("Error trying to start scanner", status);
